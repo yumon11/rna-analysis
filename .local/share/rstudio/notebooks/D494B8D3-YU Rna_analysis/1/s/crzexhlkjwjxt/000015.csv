@@ -1,0 +1,26 @@
+"0","tumour_v_control <- results(dds, filterFun=ihw, alpha=0.05, c(""condition"", ""tumour"", ""control""))"
+"0","res3 <- lfcShrink(dds=dds, res=tumour_v_control, coef=4, type=""apeglm"")"
+"2","using 'apeglm' for LFC shrinkage. If used in published research, please cite:
+    Zhu, A., Ibrahim, J.G., Love, M.I. (2018) Heavy-tailed prior distributions for
+    sequence count data: removing the noise and preserving large differences.
+    Bioinformatics. https://doi.org/10.1093/bioinformatics/bty895
+"
+"0","summary(res3)"
+"1","
+"
+"1","out of 21474 with nonzero total read count
+"
+"1","adjusted p-value < 0.05
+"
+"1","LFC > 0 (up)       : 269, 1.3%
+"
+"1","LFC < 0 (down)     : 199, 0.93%
+"
+"1","outliers [1]       : 0, 0%
+"
+"1","[1] see 'cooksCutoff' argument of ?results
+"
+"1","see metadata(res)$ihwResult on hypothesis weighting
+"
+"1","
+"

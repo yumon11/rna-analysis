@@ -1,0 +1,7 @@
+"0","de_up <- get_upregulated(as.data.frame(res1))"
+"0","de_down <- get_downregulated(as.data.frame(res1))"
+"0","upregulated_genes <- annotate_de_genes(de_up)"
+"0","downregulated_genes <- annotate_de_genes(de_down)"
+"0",""
+"0","#confirm these worked"
+"0","head(upregulated_genes)"

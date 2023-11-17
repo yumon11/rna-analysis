@@ -1,0 +1,12 @@
+help/doc/home/,Home
+help/library/EnhancedVolcano/html/EnhancedVolcano.html,R: Publication-ready volcano plots with enhanced colouring and...
+help/doc/html/Search?pattern=biomart&title=1&keyword=1&alias=1,R: Search Results
+help/library/biomaRt/doc/accessing_ensembl.html,Accessing Ensembl annotation with biomaRt
+help/library/DESeq2/html/normTransform.html,R: Normalized counts transformation
+help/library/SummarizedExperiment/html/SummarizedExperiment-class.html,R: SummarizedExperiment objects
+help/library/DESeq2/html/rlog.html,R: Apply a 'regularized log' transformation
+help/library/DESeq2/html/lfcShrink.html,R: Shrink log2 fold changes
+help/library/PCAtools/html/pca.html,R: PCAtools
+help/library/stats/html/dist.html,R: Distance Matrix Computation
+help/library/fgsea/html/fgsea.html,R: Wrapper to run methods for preranked gene set enrichment...
+help/doc/html/Search?pattern=NES&title=1&keyword=1&alias=1,R: Search Results

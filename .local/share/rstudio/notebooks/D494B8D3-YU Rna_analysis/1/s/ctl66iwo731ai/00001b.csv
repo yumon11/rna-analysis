@@ -1,0 +1,2 @@
+"0","tx2gene <- getBM(attributes = c(""ensembl_transcript_id_version"", ""hgnc_symbol""), mart = mart, useCache = FALSE)"
+"0","head(tx2gene)"

@@ -1,0 +1,8 @@
+"0","filt_down <- as.vector(filtered_pathway$pathway)"
+"0",""
+"0","for (i in filt_down){"
+"0","    plt <- plotEnrichment(pathway = pathway[[i]],"
+"0","    gseaParam = 1, ticksSize = 0.5, stats= rank) +"
+"0","    labs(title=i) + theme(plot.title = element_text(hjust = 0.5, face=""bold""))"
+"0","    print(plt)"
+"0","}"

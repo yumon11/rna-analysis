@@ -1,0 +1,13 @@
+{
+	"n_targets": 202897,
+	"n_bootstraps": 0,
+	"n_processed": 25000000,
+	"n_pseudoaligned": 22441646,
+	"n_unique": 4655993,
+	"p_pseudoaligned": 89.8,
+	"p_unique": 18.6,
+	"kallisto_version": "0.50.0",
+	"index_version": 12,
+	"start_time": "Fri Nov  3 15:53:29 2023",
+	"call": "kallisto quant -i Homo_sapiens.GRCh38.index -o tumour_1 --single -t 4 -l 200 -s 20 tumour_1.fastq.gz"
+}

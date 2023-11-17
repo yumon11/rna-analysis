@@ -1,0 +1,406 @@
+---
+title: "RNA assignment"
+output: html_document
+date: "2023-11-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(biomaRt)
+library(tximport)
+library(rhdf5)
+library(gplots)
+library(org.Hs.eg.db)
+library(DESeq2)
+library(DT)
+library(apeglm)
+library(RColorBrewer)
+library(IHW)
+library(PCAtools)
+library(pheatmap)
+library(clusterProfiler)
+library(EnhancedVolcano)
+library(ComplexHeatmap)
+library(circlize)
+library(fgsea)
+library(tidyverse)
+library(ggpubr)
+```
+```{r}
+quant_dir <- "/home/rstudio"
+list.files(quant_dir)
+```
+```{r}
+samples <- read.csv(paste0(quant_dir, "/samples.csv"), header=T, row.names = "samples", stringsAsFactors = T)
+samples
+```
+
+```{r}
+samples$replicate <- factor(samples$replicate)
+
+
+factor_cols <- sapply(samples, is.factor)
+factor_cols
+```
+```{r}
+files <- file.path(quant_dir, rownames(samples), "abundance.tsv")
+names(files) <- paste0(rownames(samples))
+files
+```
+```{r}
+mart <- useMart(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+mart
+```
+
+```{r}
+tx2gene <- getBM(attributes = c("ensembl_transcript_id_version", "hgnc_symbol"), mart = mart, useCache = FALSE)
+head(tx2gene)
+```
+
+```{r}
+txi <- tximport(files, type = "kallisto", tx2gene = tx2gene)
+head(txi$abundance)
+
+```
+
+```{r}
+dds <- DESeqDataSetFromTximport(txi, colData = samples, design = ~ replicate + condition)
+dds
+```
+```{r}
+dds$condition <- relevel(dds$condition, ref = "control")
+dds <- DESeq(dds)
+resultsNames(dds)
+```
+```{r}
+counts <- counts(dds, normalized=TRUE)
+counts
+```
+```{r}
+log2_counts <- assay(normTransform(dds))
+rld_counts <- assay(rlog(dds))
+
+library(vsn)
+library(hexbin)
+
+## x-axis is the transformed mean not the raw mean..
+
+log2_plt <- meanSdPlot(log2_counts, ranks=FALSE, plot=FALSE)
+log2_plt$gg + ggtitle("Log2 + PC Transformation") + xlim(0,20)
+```
+```{r}
+rld_plt <- meanSdPlot(rld_counts, ranks=FALSE, plot=FALSE)
+rld_plt$gg + ggtitle("Rlog Transformation") + xlim(0,20)
+```
+```{r}
+## Calculate distance between samples
+sampleDists <- dist(t(rld_counts))
+
+## Place distances in matrix
+sampleDistMatrix <- as.matrix(sampleDists)
+
+## Optional, remove colnames
+colnames(sampleDistMatrix) <- NULL
+
+## create annotation dataframe
+ann <- data.frame(Condition = samples$condition)
+
+col <- c("blue", "forestgreen")
+names(col) <- c("tumour", "control")
+ann_col <- list(Condition = col)
+
+## match annotation rownames to distance mat
+rownames(ann) <- rownames(sampleDistMatrix)
+
+pheatmap(mat=sampleDistMatrix,
+         ## pass distance metric calculated to heatmap
+         clustering_distance_rows=sampleDists,
+         clustering_distance_cols=sampleDists,
+         ## pass annotation dataframe 
+         annotation_col = ann,
+         ## add colors
+         annotation_colors = ann_col,
+         ## heatmap colours
+         col=hcl.colors(100,"GnBu",rev=T))
+```
+
+```{r}
+p <- pca(rld_counts, metadata = samples)
+
+biplot(p,
+       colby = 'condition',
+       colkey = c('tumour'='royalblue', 'control'='forestgreen'),
+       hline = 0,
+       vline = 0,
+       legendPosition = 'right',
+       legendLabSize = 12,
+       legendIconSize = 8.0,
+       title = 'PCA bi-plot',
+       subtitle = 'PC1 versus PC2')
+```
+```{r}
+
+tumour_v_ctrl <- results(dds, filterFun=ihw, alpha=0.05, c("condition", "tumour", "control"))
+res1 <- lfcShrink(dds=dds, res=tumour_v_ctrl, coef=4, type="apeglm")
+summary(res1)
+```
+```{r}
+
+dds$condition <- relevel(dds$condition, ref = "control")
+dds <- DESeq(dds)
+
+# double check it worked
+resultsNames(dds)
+```
+```{r}
+tumour_v_control <- results(dds, filterFun=ihw, alpha=0.05, c("condition", "tumour", "control"))
+res3 <- lfcShrink(dds=dds, res=tumour_v_control, coef=4, type="apeglm")
+summary(res3)
+```
+```{r}
+get_upregulated <- function(df){
+    key <- intersect(rownames(df)[which(df$log2FoldChange>=1)], rownames(df)[which(df$pvalue<=0.05)])
+  results <- as.data.frame((df)[which(rownames(df) %in% key),])
+    return(results)
+}
+```
+
+```{r}
+get_downregulated <- function(df){
+    key <- intersect(rownames(df)[which(df$log2FoldChange<=-1)], rownames(df)[which(df$pvalue<=0.05)])
+    results <- as.data.frame((df)[which(rownames(df) %in% key),])
+    return(results)
+}
+```
+
+```{r}
+annotate_de_genes <- function(df){
+
+    df$hgnc_symbol <- rownames(df)
+    mart <- useMart(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+    info <- getBM(attributes=c("hgnc_symbol",
+                               "ensembl_gene_id_version",
+                               "chromosome_name",
+                               "start_position",
+                               "end_position",
+                               "strand",
+                               "entrezgene_description"),
+                  filters = c("hgnc_symbol"),
+                  values = df$hgnc_symbol,
+                  mart = mart,
+                  useCache=FALSE)
+
+    tmp <- merge(df, info, by="hgnc_symbol")
+    tmp$strand <- gsub("-1", "-", tmp$strand)
+    tmp$strand <- gsub("1", "+", tmp$strand)
+    tmp$hgnc_symbol <- make.names(tmp$hgnc_symbol, unique = T)
+    tmp <- tmp[!grepl("CHR", tmp$chromosome_name),]
+
+    output_col <- c("Gene", "Ensembl ID", "Chromosome", "Start", "Stop", "Strand", "Description", "Log2FC", "P-value", "Adj P-value")
+    tmp <- subset(tmp, select=c(hgnc_symbol, ensembl_gene_id_version, chromosome_name, start_position, end_position, strand, entrezgene_description, log2FoldChange, pvalue, padj))
+    colnames(tmp) <- output_col
+
+    if(min(tmp$Log2FC) > 0){
+        tmp <- tmp[order(-tmp$Log2FC),]
+    }else{
+        tmp <- tmp[order(tmp$Log2FC),]
+    }
+
+    return(tmp)
+
+}
+```
+
+```{r}
+de_up <- get_upregulated(as.data.frame(res1))
+de_down <- get_downregulated(as.data.frame(res1))
+upregulated_genes <- annotate_de_genes(de_up)
+downregulated_genes <- annotate_de_genes(de_down)
+
+#confirm these worked
+head(upregulated_genes)
+```
+```{r}
+## remove NA values from results
+res1 <- na.omit(res1)
+
+## calculate min/max axis values for plot 
+min_width <- min(res1$log2FoldChange)
+max_width <- max(res1$log2FoldChange)
+max_height <- -log10(min(res1[res1$pvalue>0, 5]))
+
+## Grab top 10 up-reg genes for plot
+up <- subset(res1, res1$log2FoldChange > 1 & res1$pvalue <= 0.05)
+up <- up[order(-up$log2FoldChange),]
+up_list <- head(rownames(up), n=10L)
+
+## Grab top 10 down-reg genes for plot
+down <- subset(res1, res1$log2FoldChange < -1 & res1$pvalue <= 0.05)
+down <- down[order(down$log2FoldChange),]
+down_list <- head(rownames(down), n=10L)
+
+## place top 20 DE genes in vector 
+plot_top_20 <- c(up_list, down_list)
+
+EnhancedVolcano(res1,
+                lab=rownames(res1),
+                x="log2FoldChange",
+                y="pvalue",
+                selectLab=plot_top_20,
+                drawConnectors=TRUE,
+                legendPosition = "none",
+                FCcutoff=1.0,
+                pCutoff=0.05,
+                title="Volcano Plot",
+                subtitle="Tumour vs. Control",
+                caption = paste0('Total Genes = ', nrow(res1)),
+                xlim=c(min_width, max_width),
+                ylim=c(0, max_height))
+```
+```{r}
+res1 <- na.omit(tumour_v_ctrl)
+
+min_width <- min(res1$log2FoldChange)
+max_width <- max(res1$log2FoldChange)
+max_height <- -log10(min(res1[res1$pvalue>0, 5]))
+
+up <- subset(res1, res1$log2FoldChange > 1 & res1$pvalue <= 0.05)
+up <- up[order(-up$log2FoldChange),]
+up_list <- head(rownames(up), n=10L)
+
+down <- subset(res1, res1$log2FoldChange < -1 & res1$pvalue <= 0.05)
+down <- down[order(down$log2FoldChange),]
+down_list <- head(rownames(down), n=10L)
+
+plot_top_20 <- c(up_list, down_list)
+EnhancedVolcano(res1,
+                      lab=rownames(res1),
+                    x="log2FoldChange",
+                    y="pvalue",
+                    selectLab=plot_top_20,
+                    drawConnectors=TRUE,
+                    FCcutoff=1.0,
+                    pCutoff=0.05,
+                    title="Volcano Plot",
+                    subtitle="Tumour vs. Control",
+                    legendLabSize=8,
+                    caption = paste0('Total Genes = ', nrow(res1)))
+```
+```{r}
+res1 <- na.omit(res1)
+```
+
+```{r}
+subset <- rld_counts[, 1:6]
+
+# now select de_up, de_down, i.e DE genes that passed the filtering our function produced
+up <- rownames(de_up)
+down <- rownames(de_down)
+
+# subset matrix to include only DE genes
+key <- c(up, down)
+subset <- subset[which(rownames(subset) %in% key),]
+
+# scale and center the values
+mat <- as.matrix(scale(t(subset), center = T))
+
+# basic plot to check we're plotting something sensible
+#pheatmap(t(mat))
+
+# spruce it up a bit..
+ann <- data.frame(Condition = c(rep("Tumour", 3), rep("Control", 3)))
+rownames(ann) <- rownames(mat)
+col <- c("blue", "forestgreen")
+names(col) <- c("Tumour", "Control")
+ann_col <- list(Condition = col)
+
+pheatmap(t(mat), 
+         show_rownames = FALSE,
+         annotation_col = ann,
+         annotation_colors = ann_col,
+         color = hcl.colors(100, "PRGn",rev=F))
+
+
+```
+```{r}
+res <- as.data.frame(res1) 
+res$hgnc_symbol <- rownames(res)
+
+# compute summary stat
+fgsea_rank <- res %>%
+              dplyr::select(hgnc_symbol, log2FoldChange) %>%
+              na.omit() %>%
+              distinct() %>%
+              group_by(hgnc_symbol) %>%
+              summarize(stat=mean(log2FoldChange))
+
+fgsea_rank
+```
+```{r}
+rank <- deframe(fgsea_rank)
+head(rank, 20)
+```
+
+```{r}
+pathway <- gmtPathways("/home/rstudio/c6.all.v2023.2.Hs.symbols.gmt")
+head(pathway, 1)
+```
+```{r}
+fgsea <- fgsea(pathways=pathway, stats=rank, nperm=1000)
+
+fgseaResTidy <- fgsea %>%
+  as_tibble() %>%
+  arrange(desc(NES))
+
+# Show in a nice table:
+fgseaResTidy %>%
+  dplyr::select(-leadingEdge, -ES, -nMoreExtreme) %>%
+  arrange(padj) %>%
+  DT::datatable()
+```
+```{r}
+filtered_pathway <- subset(fgsea, NES > 1.3)
+filtered_pathway
+```
+
+```{r}
+filt_up <- as.vector(filtered_pathway$pathway)
+
+for (i in filt_up){
+    plt <- plotEnrichment(pathway = pathway[[i]],
+    gseaParam = 1, ticksSize = 0.5, stats= rank) +
+    labs(title=i) + theme(plot.title = element_text(hjust = 0.5, face="bold"))
+    print(plt)
+}
+
+```
+```{r}
+filtered_pathway <- subset(fgsea, NES < -1.3)
+filtered_pathway
+```
+```{r}
+filt_down <- as.vector(filtered_pathway$pathway)
+
+for (i in filt_down){
+    plt <- plotEnrichment(pathway = pathway[[i]],
+    gseaParam = 1, ticksSize = 0.5, stats= rank) +
+    labs(title=i) + theme(plot.title = element_text(hjust = 0.5, face="bold"))
+    print(plt)
+}
+```
+
+##Name: Yu Mon    ID: 23100707      github: yumon11 DESeq2 dataset is used to analyze the differential expression of RNA sequence. Before exploratory data analysis, there are many processes that need to do beforehand. 1. read samples.csv file (tumour and control with 3 replicates each) 2. quantify the data with kallisto using pseudo alignment approch 3. create an abundance.tsv file 4. use tximport to import transcript-level abundances from kallisto and convert them to gene counts for downstream analysis. 5. apply BioMart to export data from Ensembl, where Ensembl reference cDNA (Homo sapiens GRCh38) was used as a dataset. 6. Ensembl transcript ID are mappedto gene symbols (hgnc symbol) 7. dds is created from tximport (control = reference) 8. with relevel function, tumour versus control is the greatest interest among samples comparison. 9. dds is counted in order to read counts of genes and compared them between control and tumour groups 10.  log2 counts is made by adding dds to normTransform function to normalized counts and summarizing it. 11.  rlog with dds and assay to summerize the rlog 12. In meanSd plot of Log2 counts, sd = 2, mean ~1 13. In meanSd plot of Rlog, sd ~ 3.5, mean = 9 .Subsequently, for heatmap data, distance between samples is calculated , where there is a strong correlation between tumour groups (1 and 3 ) and control groups ( control 1).Next, samples are used as a metadata in pca plot, where two groups in tumor samples have high PC1 scores (i.e. those samples are positively correlated to PC1) although one group in tumor samples have low PC1 values. The control samples have a positive association with PC2 scores. For estimating dispersions and shrinkage, lfcShrinkage function is used with the number of coefficient (4) in dds, where adjusted p-value < 0.05 , LFC > 0 is 2691.3% and LFC <0 is 1990.93%. Furthermore, upregulated genes with specific chromosome (start and stop strand), log2FC, p-value and adjusted p-value can be calculated with log2FC >=1, whereas log2FC <=-1 can be used for calculating downregulated genes. The upregulated genes and downregulated genes associated with tumour and control samples are compared by using volcano plot, where downregulated genes (UQCRFS1P1) has been shown  as a negative log2 fold change and upregulated genes (ADAMTS12 and ID1) are shown postive log2 fold change. In heatmap figure, it can be seen that different gene expressions are expressed in tumour groups and control groups (i.e. some genes are only expressed in tumour groups, but not expressed in control groups). For gene set enrichment analysis, mean of log2 fold change of hgnc symbol are calculated and summarized as stat. According to the pathway and stat(rank) in fgsea, p-value, adjusted p-value, ES and size of the pathway related to samples can be calculated. By adding NES > 1.3 and fgsea, filtered pathway can be obtained, where p-value, adjusted p-value of only upregulated pathways can be achieved. With this result, plot enrichment can be done, in which maximum enrichment score and rank around 4000 can be seen. Likewise, by changing NES <-1.3, p-value of downregulated pathways can be calculated and the upside-down plot enrichment of the pathway can be seen with the above result.
+
+
+
+
+
+
+
+
+```
+

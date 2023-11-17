@@ -1,0 +1,27 @@
+]0;/home/rstudio[?2004h]0;rstudio@7bc194cc6720: ~[01;32mrstudio@7bc194cc6720[00m:[01;34m~[00m$ [K]0;rstudio@7bc194cc6720: ~[01;32mrstudio@7bc194cc6720[00m:[01;34m~[00m$ pwd
+[?2004l/home/rstudio
+]0;/home/rstudio[?2004h]0;rstudio@7bc194cc6720: ~[01;32mrstudio@7bc194cc6720[00m:[01;34m~[00m$ ls
+[?2004l]0;/home/rstudio[?2004h]0;rstudio@7bc194cc6720: ~[01;32mrstudio@7bc194cc6720[00m:[01;34m~[00m$ [7mif (!require("BiocManager", quietly = TRUE))[27m
+[7m    install.packages("BiocManager")[27m
+[7mBiocManager::install(version = "3.17")[27m^C[?2004l[?2004h[?2004l
+]0;/home/rstudio[?2004h]0;rstudio@7bc194cc6720: ~[01;32mrstudio@7bc194cc6720[00m:[01;34m~[00m$ apt-[K install zlib1g
+[?2004l[1;31mE: [0mCould not open lock file /var/lib/dpkg/lock-frontend - open (13: Permission denied)[0m
+[1;31mE: [0mUnable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), are you root?[0m
+]0;/home/rstudio[?2004h]0;rstudio@7bc194cc6720: ~[01;32mrstudio@7bc194cc6720[00m:[01;34m~[00m$ apt install zlib1g[1@s[1@u[1@d[1@o[1@ 
+[?2004l[sudo] password for rstudio: 
+rstudio is not in the sudoers file.  This incident will be reported.
+]0;/home/rstudio[?2004h]0;rstudio@7bc194cc6720: ~[01;32mrstudio@7bc194cc6720[00m:[01;34m~[00m$ [K]0;rstudio@7bc194cc6720: ~[01;32mrstudio@7bc194cc6720[00m:[01;34m~[00m$ cd /home/
+[?2004l]0;/home[?2004h]0;rstudio@7bc194cc6720: /home[01;32mrstudio@7bc194cc6720[00m:[01;34m/home[00m$ ls
+[?2004l[0m[01;34mdata[0m  [01;34mkallisto[0m  [01;34mrstudio[0m
+]0;/home[?2004h]0;rstudio@cce3dd8726c9: /home[01;32mrstudio@cce3dd8726c9[00m:[01;34m/home[00m$ ls
+[?2004l[0m[01;34mkallisto[0m  [01;34mrstudio[0m
+]0;/home[?2004h]0;rstudio@cce3dd8726c9: /home[01;32mrstudio@cce3dd8726c9[00m:[01;34m/home[00m$ mv to[K[Krstudio/toy_data/ ./
+[?2004lmv: cannot move 'rstudio/toy_data/' to './toy_data': Permission denied
+]0;/home[?2004h]0;rstudio@cce3dd8726c9: /home[01;32mrstudio@cce3dd8726c9[00m:[01;34m/home[00m$ ls
+[?2004l[0m[01;34mkallisto[0m  [01;34mrnaseq_data[0m  [01;34mrstudio[0m  [01;34mtoy_data[0m
+]0;/home[?2004h]0;rstudio@f1c20b0ff9ff: /home[01;32mrstudio@f1c20b0ff9ff[00m:[01;34m/home[00m$ history -c#
+[?2004lbash: history: -#: invalid option
+history: usage: history [-c] [-d offset] [n] or history -anrw [filename] or history -ps arg [arg...]
+]0;/home[?2004h]0;rstudio@f1c20b0ff9ff: /home[01;32mrstudio@f1c20b0ff9ff[00m:[01;34m/home[00m$ history -c#[K
+[?2004l]0;/home[?2004h]0;rstudio@f1c20b0ff9ff: /home[01;32mrstudio@f1c20b0ff9ff[00m:[01;34m/home[00m$ clear
+]0;/home[?2004h]0;rstudio@f1c20b0ff9ff: /home[01;32mrstudio@f1c20b0ff9ff[00m:[01;34m/home[00m$ 

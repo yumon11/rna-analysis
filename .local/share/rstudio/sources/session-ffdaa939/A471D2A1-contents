@@ -1,0 +1,8 @@
+samples,condition,replicate
+control_1,control,1
+control_2,control2,2
+control_3,control3,3
+tumour_1,tumour1,1
+tumour_2,tumour2,2
+tumour_3,tumour3,3
+

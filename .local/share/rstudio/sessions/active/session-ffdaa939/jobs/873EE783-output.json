@@ -1,0 +1,8 @@
+[1,"Installing 'markdown' for R Markdown...\n"]
+[2,"Installing package into ‘/usr/local/lib/R/site-library’\n(as ‘lib’ is unspecified)\n"]
+[2,"trying URL 'https://packagemanager.posit.co/cran/__linux__/jammy/latest/src/contrib/markdown_1.10.tar.gz'\n"]
+[2,"Content type 'binary/octet-stream' length 197339 bytes (192 KB)\n=============================="]
+[2,"===="]
+[2,"================\ndownloaded 192 KB\n\n"]
+[2,"* installing *binary* package ‘markdown’ ...\n"]
+[2,"* DONE (markdown)\n\nThe downloaded source packages are in\n\t‘/tmp/RtmpaMCjsG/downloaded_packages’\n\n\n✔ Package 'markdown' successfully installed.\n"]

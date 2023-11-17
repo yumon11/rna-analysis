@@ -1,0 +1,5 @@
+"0","mart <- useMart(biomart = ""ensembl"", dataset = ""hsapiens_gene_ensembl"")"
+"0","mart"
+"1","Object of class 'Mart':
+  Using the ENSEMBL_MART_ENSEMBL BioMart database
+  Using the hsapiens_gene_ensembl dataset"

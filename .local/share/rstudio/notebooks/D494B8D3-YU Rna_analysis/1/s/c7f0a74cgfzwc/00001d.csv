@@ -1,0 +1,2 @@
+"0","samples <- read.csv(paste0(quant_dir, ""/samples.csv""), header=T, row.names = ""samples"", stringsAsFactors = T)"
+"0","samples"

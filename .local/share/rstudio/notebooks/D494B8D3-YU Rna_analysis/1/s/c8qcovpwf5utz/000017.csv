@@ -1,0 +1,13 @@
+"0","fgsea <- fgsea(pathways=pathway, stats=rank, nperm=1000)"
+"2","Warning: You are trying to run fgseaSimple. It is recommended to use fgseaMultilevel. To run fgseaMultilevel, you need to remove the nperm argument in the fgsea function call."
+"2","Warning: There are ties in the preranked stats (12.28% of the list).
+The order of those tied genes will be arbitrary, which may produce unexpected results."
+"0","fgseaResTidy <- fgsea %>%"
+"0","  as_tibble() %>%"
+"0","  arrange(desc(NES))"
+"0",""
+"0","# Show in a nice table:"
+"0","fgseaResTidy %>%"
+"0","  dplyr::select(-leadingEdge, -ES, -nMoreExtreme) %>%"
+"0","  arrange(padj) %>%"
+"0","  DT::datatable()"

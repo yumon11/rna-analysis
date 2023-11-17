@@ -1,0 +1,5 @@
+"0","get_downregulated <- function(df){"
+"0","    key <- intersect(rownames(df)[which(df$log2FoldChange<=-1)], rownames(df)[which(df$pvalue<=0.05)])"
+"0","    results <- as.data.frame((df)[which(rownames(df) %in% key),])"
+"0","    return(results)"
+"0","}"
